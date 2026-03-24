@@ -11,25 +11,8 @@ params{
 }
 
 include { fastqc } from "./modules/fastqc"
+include { multiqc } from "./modules/multiqc"
 
-
-process multiqc{
-    container "multiqc/multiqc:latest"
-   
-    tag("${sampleid}")
-
-    input:
-    val sampleid
-    path qc_results_path
-
-    output:
-    path("*")
-
-    script:
-    """
-    multiqc ${qc_results_path}
-    """
-}
 
 // process CleanUp{
 //     input:
