@@ -5,7 +5,7 @@ process fastqc{
     container "biocontainers/fastqc:v0.11.9_cv8"
 
     input:
-    tuple val(sampleid), path(reads)
+    tuple val(sampleid), path(read1), path(read2)
 
     output:
     path("${sampleid}_QC/"), emit: "qc_path"
@@ -14,7 +14,7 @@ process fastqc{
     script:
     """
     mkdir -p "${sampleid}_QC"
-    fastqc ${reads[0]} ${reads[1]} -o ${sampleid}_QC/
+    fastqc ${read2} ${read2} -o ${sampleid}_QC/
     
     """
 }

@@ -10,8 +10,11 @@ params{
     batch: String = "batch_default"
 }
 
+//aliases are used here to allow for reusing of processes under different names to avoid overwriting
 include { fastqc } from "./modules/fastqc"
+include { fastqc as fastqc_trimmed} from "./modules/fastqc"
 include { multiqc } from "./modules/multiqc"
+include { multiqc as multiqc_trimmed} from "./modules/multiqc"
 
 
 // process CleanUp{
@@ -27,10 +30,27 @@ include { multiqc } from "./modules/multiqc"
 
 
 
-// process Trimming{
+process fastp{
+    container "biocontainers/fastp:v0.20.1_cv1"
 
+    tag("${sampleid}")
 
-// }
+    input:
+    tuple val(sampleid), path(read1), path(read2)
+
+    output:
+    tuple val(sampleid), path("*_1.trimmed.fastq.gz"), path("*_2.trimmed.fastq.gz"), emit: "read_tuple"
+
+    script:
+    """
+    fastp \
+      -i ${read1} -I ${read2} \
+      -o ${sampleid}_1.trimmed.fastq.gz \
+      -O ${sampleid}_2.trimmed.fastq.gz \
+      -h ${sampleid}.html \
+      -j ${sampleid}.json \
+    """
+}
 
 // process Aligner{
 
@@ -59,16 +79,24 @@ include { multiqc } from "./modules/multiqc"
 workflow{
 
     main:
-    Reads_channel = channel.fromFilePairs("${params.read_location}/*_{1,2}.fastq.gz") //this specifies group pairs matching the pattern starts with ERR ends with _1 OR _2
+    Raw_Reads_channel = channel.fromFilePairs("${params.read_location}/*_{1,2}.fastq.gz", flat: true).view()//this specifies group pairs matching the pattern starts with ERR ends with _1 OR _2 it outputs an array with value 0 being ID before _1/2 and the read pair
 
-    fastqc(Reads_channel)
+    fastqc(Raw_Reads_channel)
     multiqc(params.batch_id, fastqc.out.qc_path.collect())
+    fastp(Raw_Reads_channel)
+
+    fastp.out.view()
+    fastqc_trimmed(fastp.out.read_tuple)
+    multiqc_trimmed(params.batch_id, fastqc_trimmed.out.qc_path.collect())
+
 
     publish:
     QCresults = fastqc.out.qc_path
-    multiqc_result = multiqc.out.view()
-
-
+    multiqc_results = multiqc.out
+    fastp_results = fastp.out
+    Trimmed_QCresults = fastqc_trimmed.out.qc_path.view()
+    Trimmed_multiqc_results = multiqc_trimmed.out.view()
+    //currently broken, cannot access first element from an empty list, fastqc_trimmed and multi_qc trimmed are jumping ahead
 
 }
 
@@ -77,7 +105,19 @@ output{
         path "./${params.batch}"
         mode "copy"
     }
-    multiqc_result{
+    multiqc_results{
+        path "./${params.batch}/multiqc"
+        mode "copy"
+    }
+    fastp_results{
+        path "./${params.batch}/fastp"
+        mode ""
+    }
+    Trimmed_QCresults{
+        path "./${params.batch}/Trimmed"
+        mode "copy"
+    }
+    Trimmed_multiqc_results{
         path "./${params.batch}/multiqc"
         mode "copy"
     }
