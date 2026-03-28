@@ -5,9 +5,10 @@ nextflow.enable.dsl=2
 params{
     read_location: String
     study_code: String
-    batch_id: String
     Keep_intermediates: Boolean
     batch: String = "batch_default"
+    Ref_genome_path: Path
+    Ref_Accession: String
 }
 
 //aliases are used here to allow for reusing of processes under different names to avoid overwriting
@@ -26,22 +27,58 @@ include { fastp } from "./modules/fastp.nf"
 //     script:
 // }
 
+process BWA_Indexing{
+    tag("indexing reference genome")
 
+    //container "biocontainers/bwa:v0.7.17_cv1" //pure bwa docker image
+
+    input:
+    path(reference_genome) //importing the reference genome
+
+    output:
+    path "*.{anb,ann,bwt,pac,sa}", emit: "Index_files" //output all files
+
+    script:
+    """
+    bwa index ${reference_genome}
+    """
+
+    stub:
+    """
+    touch "${params.Ref_Accession}.amb"
+    touch "${params.Ref_Accession}.ann"
+    touch "${params.Ref_Accession}.bwt"
+    touch "${params.Ref_Accession}.pac"
+    touch "${params.Ref_Accession}.sa"
+    """
+}
 
 process Aligner{
         
     tag("${sampleid}")
 
-    container "biocontainers/bwa:v0.7.17_cv1"
+    container "community.wave.seqera.io/library/bwa_samtools:eac4ad78deba8f5d"
         
     input:
     tuple val(sampleid), path(read1), path(read2)
+    path(Index)
+    path(Reference)
 
 
 
     output:
-    val placeholder
+    path("*.bam"), emit: "bam", optional: true
+    path("*.cram"), emit: "cram", optional: true
+    path("*.crai"), emit: "crai", optional: true
+    path("*.csi"), emit: "csi", optional: true
+
     script:
+    read_group = "@RG\tID:Seq${sampleid}\tSM:Seq${sampleid}\tPL:ILLUMINA\tPI:150"
+    """
+    bwa mem -R ${read_group} ${Reference} ${read1} ${read2} | samtools view -b -S | samtools sort -n -o "${sampleid}.bam"
+    """
+
+    stub:
     """
     """
 }
@@ -74,17 +111,20 @@ workflow{
 
     //initial raw read QC
     fastqc(Raw_Reads_channel)
-    multiqc(params.batch_id, fastqc.out.qc_path.collect())
+    multiqc(params.batch, fastqc.out.qc_path.collect())
     
     //running fastp to remove adapters where possible
     fastp(Raw_Reads_channel)
 
     //second round of post-trimming QC
     fastqc_trimmed(fastp.out.read_tuple)
-    multiqc_trimmed(params.batch_id, fastqc_trimmed.out.qc_path.collect())
+    multiqc_trimmed(params.batch, fastqc_trimmed.out.qc_path.collect())
 
     //NOT COMPLETE #############################################################################!!!!!!!!!!!!!!!!!!
+    Reference_channel = channel.fromPath(params.Ref_genome_path).view()
+    BWA_Indexing(Reference_channel)
     Aligner(fastp.out.read_tuple)
+    
 
     publish:
     QCresults = fastqc.out.qc_path
@@ -94,6 +134,9 @@ workflow{
     Fastp_json = fastp.out.json //report json
     Trimmed_QCresults = fastqc_trimmed.out.qc_path.view()
     Trimmed_multiqc_results = multiqc_trimmed.out.view()
+    //Index and align
+    Indexes = BWA_Indexing.out.Index_files
+    BAM_out = Aligner.out.bam
 
 }
 
@@ -129,5 +172,12 @@ output{
     Trimmed_multiqc_results{
         path "./${params.batch}/Trimmed_multiqc"
         mode "copy"
+    }
+    //=================================Align + Indexes =================================
+    Indexes{
+        path "./${params.batch}/Aligned_and_Indexes"
+    }
+    BAM_out{
+        path "./${params.batch}/Aligned_and_Indexes"
     }
 }
