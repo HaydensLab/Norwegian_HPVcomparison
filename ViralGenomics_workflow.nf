@@ -21,7 +21,7 @@ include { multiqc as multiqc_trimmed} from "./modules/multiqc.nf" //Alias for re
 include { fastp } from "./modules/fastp.nf"
 
 include { BWA_Indexing} from "./modules/BWAindexer.nf"
-include { Aligner } from "./modules/BWAaligner.nf"
+include { Aligner } from "./modules/BWAaligner.nf"  
 
 
 // process CleanUp{
