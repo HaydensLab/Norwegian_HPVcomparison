@@ -62,13 +62,19 @@ workflow{
     //NOT COMPLETE #############################################################################!!!!!!!!!!!!!!!!!!
     Reference_channel = channel.fromPath(params.Ref_genome_path)
     BWA_Indexing(Reference_channel)
-    Aligner_input_ch = fastp.out.read_tuple
+    Aligner_input_ch = PREPROCESSING.out.Fastp_trimmed
     Aligner_indexes_ch = BWA_Indexing.out.Index_files.collect().map{ Index_files -> tuple(Index_files)}.view()
     Aligner(Aligner_input_ch, Aligner_indexes_ch)
     
 
     publish:
-    
+    QCresults               = PREPROCESSING.out.QCresults
+    Multiqc_results         = PREPROCESSING.out.Multiqc_results
+    Fastp_trimmed           = PREPROCESSING.out.Fastp_trimmed
+    Fastp_html              = PREPROCESSING.out.Fastp_html
+    Fastp_json              = PREPROCESSING.out.Fastp_json
+    Trimmed_QCresults       = PREPROCESSING.out.Trimmed_QCresults
+    Trimmed_multiqc_results = PREPROCESSING.out.Trimmed_multiqc_results
     //Index and align
     Indexes = BWA_Indexing.out.Index_files
     BAM_out = Aligner.out.bam
@@ -87,7 +93,7 @@ output{
     }
 
     //=================================fastp outputs=================================
-    Fastp_results{
+    Fastp_trimmed{
         path "./${params.batch}/fastp/"
         mode "copy"
     }

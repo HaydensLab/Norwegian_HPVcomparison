@@ -29,7 +29,7 @@ workflow PREPROCESSING{
     emit:
     QCresults               = fastqc.out.qc_path
     Multiqc_results         = multiqc.out
-    Fastp_results           = fastp.out.read_tuple //trimmed reads to go for later processing (with sample id)
+    Fastp_trimmed           = fastp.out.read_tuple //trimmed reads to go for later processing (with sample id)
     Fastp_html              = fastp.out.html //report html
     Fastp_json              = fastp.out.json //report json
     Trimmed_QCresults       = fastqc_trimmed.out.qc_path
