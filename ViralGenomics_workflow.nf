@@ -4,11 +4,11 @@ nextflow.enable.dsl=2
 
 params{
     read_location: String
-    study_code: String
-    Keep_intermediates: Boolean
     batch: String = "batch_default"
     Ref_genome_path: Path
     Ref_Accession: String
+    platform: String
+    insert_size: String
 }
 
 //aliases are used here to allow for reusing of processes under different names to avoid overwriting
@@ -20,6 +20,8 @@ include { multiqc as multiqc_trimmed} from "./modules/multiqc.nf"
 
 include { fastp } from "./modules/fastp.nf"
 
+include { Aligner } from "./modules/BWAaligner.nf"
+
 
 // process CleanUp{
 //     input:
@@ -30,13 +32,13 @@ include { fastp } from "./modules/fastp.nf"
 process BWA_Indexing{
     tag("indexing reference genome")
 
-    //container "biocontainers/bwa:v0.7.17_cv1" //pure bwa docker image
+    container "biocontainers/bwa:v0.7.17_cv1" //pure bwa docker image
 
     input:
     path(reference_genome) //importing the reference genome
 
     output:
-    path "*.{anb,ann,bwt,pac,sa}", emit: "Index_files" //output all files
+    path("*.{amb,ann,bwt,pac,sa}"), emit: "Index_files" //output all files
 
     script:
     """
@@ -53,36 +55,7 @@ process BWA_Indexing{
     """
 }
 
-process Aligner{
-        
-    tag("${sampleid}")
 
-    container "community.wave.seqera.io/library/bwa_samtools:eac4ad78deba8f5d"
-        
-    input:
-    tuple val(sampleid), path(read1), path(read2)
-    path(Indexes)
-    path(Reference)
-
-    output:
-    path("*.bam"), emit: "bam", optional: true
-    path("*.cram"), emit: "cram", optional: true
-    path("*.crai"), emit: "crai", optional: true
-    path("*.csi"), emit: "csi", optional: true
-
-    script:
-    read_group = "@RG\tID:Seq${sampleid}\tSM:Seq${sampleid}\tPL:ILLUMINA\tPI:150"
-    """
-    bwa mem -R ${read_group} ${Indexes} ${Reference} ${read1} ${read2} | samtools view -b -S | samtools sort -n -o "${sampleid}.bam"
-    """
-
-    stub:
-    """
-    touch ${sampleid}.bam
-    touch ${sampleid}.csi
-    touch ${sampleid}.crai
-    """
-}
 
 // process PostProcessing{
 
@@ -126,7 +99,7 @@ workflow{
     BWA_Indexing(Reference_channel)
     Aligner_input_ch = fastp.out.read_tuple
     Aligner_indexes_ch = BWA_Indexing.out.Index_files.collect().map{ Index_files -> tuple(Index_files)}.view()
-    Aligner(Aligner_input_ch, Aligner_indexes_ch, Reference_channel)
+    Aligner(Aligner_input_ch, Aligner_indexes_ch)
     
 
     publish:
