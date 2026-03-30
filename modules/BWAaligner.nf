@@ -9,10 +9,10 @@ process Aligner{
     path(Indexes)
 
     output:
-    path("*.bam"), emit: "bam", optional: true
-    path("*.cram"), emit: "cram", optional: true
-    path("*.crai"), emit: "crai", optional: true
-    path("*.csi"), emit: "csi", optional: true
+    tuple val(sampleid), path("*.bam"), emit: "bam", optional: true
+    tuple val(sampleid), path("*.cram"), emit: "cram", optional: true
+    tuple val(sampleid), path("*.crai"), emit: "crai", optional: true
+    tuple val(sampleid), path("*.csi"), emit: "csi", optional: true
 
     script:
     """

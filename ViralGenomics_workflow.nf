@@ -73,6 +73,7 @@ workflow{
     //Index and align
     Indexes                 = BWAALIGNMENT.out.Indexes
     BAM_out                 = BWAALIGNMENT.out.BAM_out
+    BAI_out                 = BWAALIGNMENT.out.BAI_out
 
 }
 
@@ -114,6 +115,9 @@ output{
         path "./${params.batch}/Aligned_and_Indexes"
     }
     BAM_out{
+        path "./${params.batch}/Aligned_and_Indexes"
+    }
+    BAI_out{
         path "./${params.batch}/Aligned_and_Indexes"
     }
 }
