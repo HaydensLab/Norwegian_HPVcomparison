@@ -14,7 +14,7 @@ process Fixmate{
 
     script:
     """
-    samtools fixmate -m -o "${sampleid}_fixmate.bam"
+    samtools fixmate -m ${bam_path} ${sampleid}_fixmate.bam
     samtools sort "${sampleid}_fixmate.bam" -o "${sampleid}_sorted_fixmate.bam"
     """
 }
@@ -64,6 +64,11 @@ workflow BWAALIGNMENT{
 
     emit:
     Indexes = BWA_Indexing.out.Index_files
-    BAM_out = Markdup.out.bam.view().map{sampleid, markdup_bam_path -> markdup_bam_path}.view()
+    BAM_out = Markdup.out.Markdup_BAM.view().map{sampleid, markdup_bam_path -> markdup_bam_path}.view()
     BAI_out = IndexForIGV.out.bai
+
+    //test
+    //BAM_out = Aligner.out.bam.map{sampleid, rando_bam_path -> rando_bam_path}
+    //BAI_out = channel.empty()
+    
 }
