@@ -18,6 +18,9 @@ params{
 //     script:
 // }
 
+// process MinimapAlign{
+
+// }
 
 
 
@@ -50,6 +53,9 @@ workflow{
     //ALIGNMENT AND POST-PROCESSING
     BWAALIGNMENT(PREPROCESSING.out.Fastp_trimmed) //runs BWA-MEM and removes duplicate reads whilst generating a .bai for IGV viewing
     
+    //Variant calling
+
+
     //CONSENSUS GENOME GENERATION
 
     //PHYLOGENETIC ANALYSIS
