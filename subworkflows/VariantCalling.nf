@@ -2,18 +2,18 @@
 nextflow.enable.dsl=2
 
 
-process CliqueSNV{
+// process CliqueSNV{
 
-}
+// }
 
-process ShoRAH{
+// process ShoRAH{
 
 
-}
+// }
 
-process GATKHaplotypecaller{
+// process GATKHaplotypecaller{
 
-}
+// }
 
 process LoFreqIndelQual{
 
@@ -22,15 +22,18 @@ process LoFreqIndelQual{
     container 'nanozoo/lofreq:2.1.5--229539a'
 
     input:
-
+    path(ref_genome)
+    tuple val(sampleid), path(bam_path)
 
     output:
+    tuple val (sampleid), path("${sampleid}.indelqual.bam"), emit: IndelQual_BAM
 
     script:
     """
-    lofreq indelqual --dindel -f ${params.Ref_genome_path} -o ${bam_path}
+    lofreq indelqual --dindel -f ${ref_genome} -o "${sampleid}.indelqual.bam" ${bam_path}
     """
 }
+
 
 process LofreqVarCall{
 //ENSURE BED FILE IS PROVIDED IN CASE OF VARIANT CALLING NOT ON ENTIRE GENOME (specify locations in a bed file that are being tested to avoid bonferroni problems)
@@ -40,13 +43,16 @@ process LofreqVarCall{
     container 'nanozoo/lofreq:2.1.5--229539a'
 
     input:
-
+    path(ref_genome)
+    tuple val(sampleid), path(recalibrated_bam)
 
     output:
+    path("${sampleid}_variants.vcf"), emit: LoFreq_VCF_out, optional: true
 
     script:
     """
-    lofreq indelqual --dindel -f ${params.Ref_genome_path} -o ${bam_path}
+    ##lofreq call-parallel --pp-threads 8 -f ref.fa -o vars.vcf aln.bam
+    lofreq call -f ${ref_genome} -o "${sampleid}_variants.vcf" ${recalibrated_bam}
     """
 }
 
@@ -54,11 +60,15 @@ process LofreqVarCall{
 
 workflow VARIANT_CALLING{
     take:
-    markdup_bam_path
-
+    Aligned_bam_path
 
     main:
+    Reference_channel_VCF = file(params.Ref_genome_path)
+    bams_ch = Aligned_bam_path
+
+    LoFreqIndelQual(Reference_channel_VCF, bams_ch)
+    LofreqVarCall(Reference_channel_VCF, LoFreqIndelQual.out.IndelQual_BAM)
 
     emit:
-    VCF_out = 
+    VCF_out = LofreqVarCall.out.LoFreq_VCF_out
 }

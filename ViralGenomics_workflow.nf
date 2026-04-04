@@ -54,7 +54,7 @@ workflow{
     //ALIGNMENT AND POST-PROCESSING
     BWAALIGNMENT(PREPROCESSING.out.Fastp_trimmed) //runs BWA-MEM and removes duplicate reads whilst generating a .bai for IGV viewing
     
-    //Variant calling
+    //Variant calling !!!!!!!!!!!!!!!! this currently DOES NOT WORK ------------ only works on first file put in
     VARIANT_CALLING(BWAALIGNMENT.out.BAM_out)
 
     //CONSENSUS GENOME GENERATION
@@ -72,7 +72,7 @@ workflow{
     Trimmed_multiqc_results = PREPROCESSING.out.Trimmed_multiqc_results
     //Index and align
     Indexes                 = BWAALIGNMENT.out.Indexes
-    BAM_out                 = BWAALIGNMENT.out.BAM_out
+    BAM_out                 = BWAALIGNMENT.out.BAM_out.map{sampleid, markdup_bam_path -> markdup_bam_path} //taking only the second argument of the tuple by overwriting with only second argument
     BAI_out                 = BWAALIGNMENT.out.BAI_out
     //variant calling
     VCF_out                 = VARIANT_CALLING.out.VCF_out
@@ -121,5 +121,9 @@ output{
     }
     BAI_out{
         path "./${params.batch}/Aligned_and_Indexes"
+    }
+    //=================================Variant calling =================================
+    VCF_out{
+        path "./${params.batch}/Variant_Calls"
     }
 }
