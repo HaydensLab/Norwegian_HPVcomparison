@@ -15,8 +15,39 @@ process GATKHaplotypecaller{
 
 }
 
-process Lofreq{
+process LoFreqIndelQual{
 
+    tag("${sampleid}")
+
+    container 'nanozoo/lofreq:2.1.5--229539a'
+
+    input:
+
+
+    output:
+
+    script:
+    """
+    lofreq indelqual --dindel -f ${params.Ref_genome_path} -o ${bam_path}
+    """
+}
+
+process LofreqVarCall{
+//ENSURE BED FILE IS PROVIDED IN CASE OF VARIANT CALLING NOT ON ENTIRE GENOME (specify locations in a bed file that are being tested to avoid bonferroni problems)
+
+    tag("${sampleid}")
+
+    container 'nanozoo/lofreq:2.1.5--229539a'
+
+    input:
+
+
+    output:
+
+    script:
+    """
+    lofreq indelqual --dindel -f ${params.Ref_genome_path} -o ${bam_path}
+    """
 }
 
 
