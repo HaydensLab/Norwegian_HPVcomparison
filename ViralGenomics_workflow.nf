@@ -9,6 +9,7 @@ params{
     Ref_Accession: String
     platform: String
     insert_size: String
+    Variant_Caller: String = "lofreq"
 }
 //==========================================================================Help section==========================================================================
 

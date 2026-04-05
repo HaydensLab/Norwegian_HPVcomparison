@@ -11,9 +11,33 @@ nextflow.enable.dsl=2
 
 // }
 
-// process GATKHaplotypecaller{
+// process  BaseRecalibrator{
+
 
 // }
+
+// process BQSR{
+
+
+// }
+
+process GATKHaplotypecaller{
+    tag("${sampleid}")
+
+    container 'broadinstitute/gatk:4.6.2.0'
+
+    input:
+    path(ref_genome)
+    tuple val(sampleid), path(bam_path)
+
+    output:
+    tuple val (sampleid), path("${sampleid}.gatkHTC.bam"), emit: GATK_haplotypecaller_BAM
+
+    script:
+    """
+    
+    """
+}
 
 process LoFreqIndelQual{
 
@@ -52,7 +76,7 @@ process LofreqVarCall{
     script:
     """
     ##lofreq call-parallel --pp-threads 8 -f ref.fa -o vars.vcf aln.bam
-    lofreq call -f ${ref_genome} -o "${sampleid}_variants.vcf" ${recalibrated_bam}
+    lofreq call --call-indels -f ${ref_genome} -o "${sampleid}_variants.vcf" ${recalibrated_bam}
     """
 }
 
@@ -63,11 +87,43 @@ workflow VARIANT_CALLING{
     Aligned_bam_path
 
     main:
+
     Reference_channel_VCF = file(params.Ref_genome_path)
     bams_ch = Aligned_bam_path
 
+    
     LoFreqIndelQual(Reference_channel_VCF, bams_ch)
-    LofreqVarCall(Reference_channel_VCF, LoFreqIndelQual.out.IndelQual_BAM)
+
+
+    if(!params.Variant_Caller){ //if no input is supplied
+        println("No Variant_Caller specified - check RunConfig.yaml")
+        println("Falling back to Lofreq default")
+        LofreqVarCall(Reference_channel_VCF, LoFreqIndelQual.out.IndelQual_BAM)
+
+
+    }
+    else if(params.Variant_Caller == "lofreq"){
+        println("Using VariantCaller lofreq")
+        LofreqVarCall(Reference_channel_VCF, LoFreqIndelQual.out.IndelQual_BAM)
+
+
+    }
+    else if(params.Variant_Caller == "gatk"){
+        println("Using VariantCaller GATK_haplotypecaller")
+
+
+    }
+    else if(params.Variant_Caller == "cliquesnv"){
+        println("Using VariantCaller CliqueSNV")
+
+
+    }
+    else if(params.Variant_Caller == "shorah"){
+        println("Using VariantCaller shoRAH")
+
+
+    }
+
 
     emit:
     VCF_out = LofreqVarCall.out.LoFreq_VCF_out
