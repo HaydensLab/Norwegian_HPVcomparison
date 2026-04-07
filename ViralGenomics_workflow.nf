@@ -10,6 +10,7 @@ params{
     platform: String
     insert_size: String
     Variant_Caller: String = "lofreq"
+    //Filtering_Cutoffs: String = "DP>=30 && AF>=0.01 && QUAL>20" //not yet implemented
 }
 //==========================================================================Help section==========================================================================
 
@@ -32,6 +33,20 @@ include { VARIANT_CALLING } from './subworkflows/VariantCalling.nf'
 workflow{
 
     main:
+    println("============================================PARAMETERS============================================")
+    println("batch: ${params.batch}")
+    println("Reference accession: ${params.Ref_accession}")
+    println("Variant caller: LoFreq")
+    println("Platform: ${params.platform}")
+    println("Drawing from read location: ${params.read_location}")
+    println("Provided insert size: ${params.insert_size}")
+    println("=============================================Overview=============================================")
+    println("This workflow will draw reads, align to a provided reference genome \n it will then call variants \n in this future this workflow will generate antigen prediction")
+    println("Current processes: raw fastqc, raw multiqc, fastp (later trimmomatic option), repeat QC for trimmed, BWA-MEM aligment, Fixmate + Markdup, Indexing for IGV viewing, LoFreq indelqual+Calling, VCF normalisation and filtering")
+    println("Current filtering parameters: DP>=30 && AF>=0.01 && QUAL>20 ")
+    println("!!!!!!!!!!!!!!!! To edit these please modify the Normalise_and_Filter module ----- a config parameter will be added at a later date")
+
+
     PREPROCESSING() //runs fastqc, multiqc and fastp #######add option for trimmotatic
 
     //ALIGNMENT AND POST-PROCESSING
@@ -39,6 +54,8 @@ workflow{
     
     //Variant calling !!!!!!!!!!!!!!!! this currently DOES NOT WORK ------------ only works on first file put in
     VARIANT_CALLING(BWAALIGNMENT.out.BAM_out)
+
+    //HaplotypeReconstruction for generation of varied neoantigen calls
 
     //CONSENSUS GENOME GENERATION
 
@@ -60,6 +77,7 @@ workflow{
     //variant calling
     VCF_out                 = VARIANT_CALLING.out.VCF_out
     nVCF_out                = VARIANT_CALLING.out.nVCF_out
+    fnVCF_out               = VARIANT_CALLING.out.fnVCF_out
 
 }
 
@@ -111,6 +129,9 @@ output{
         path "./${params.batch}/Variant_Calls"
     }
     nVCF_out{
+        path "./${params.batch}/Variant_Calls"
+    }
+    fnVCF_out{
         path "./${params.batch}/Variant_Calls"
     }
 }

@@ -73,7 +73,7 @@ process LofreqVarCall{
 
 process Normalise_and_Filter{
     tag("${sampleid}")
-    container 'staphb/bcftools:1.23'
+    container 'community.wave.seqera.io/library/bcftools_samtools:1.23.1--79a710bf7bd8ea91'
 
     input:
     path(ref_genome)
@@ -84,7 +84,14 @@ process Normalise_and_Filter{
     tuple val (sampleid), path("${sampleid}_filtered_norm_variants.vcf"), emit: Filtered_Normalised_VCF_out, optional: true
     script:
     """
-    bcftools norm -D -m -f "${ref_genome}" -o "${sampleid}_norm_variants.vcf" ${vcf_file}
+    echo "Generating temp index for reheading"
+    echo "Normalising vcf ----splitting multiallelic sites"
+    samtools faidx -f $ref_genome
+    bcftools reheader -f "${ref_genome}.fai" ${vcf_file} | bcftools norm -m -any -f "${ref_genome}" -o "${sampleid}_norm_variants.vcf" 
+
+    FilterSettings='DP>=30 && AF>=0.01 && QUAL>20' #######################FIX THIS LATER IT DOESNT WORK####################
+
+    echo "Filtering using settings: DP>=30 && AF>=0.01 && QUAL>20"
     bcftools view -i 'DP>=30 && AF>=0.01 && QUAL>20' "${sampleid}_norm_variants.vcf" > "${sampleid}_filtered_norm_variants.vcf"
     """
 
@@ -105,7 +112,6 @@ workflow VARIANT_CALLING{
     LoFreqIndelQual(Reference_channel_VCF, bams_ch)
     println("Using VariantCaller lofreq")
     LofreqVarCall(Reference_channel_VCF, LoFreqIndelQual.out.IndelQual_BAM)
-    println("Normalising output VCF")
     Normalise_and_Filter(Reference_channel_VCF, LofreqVarCall.out.LoFreq_VCF_out)
 
 

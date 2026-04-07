@@ -8,5 +8,10 @@ platform: "ILLUMINA"                                  #put in all caps
 #Optional
 batch: "Test"                                         
 Variant_Caller: "lofreq"                              #Options: <lofreq>, <gatk>, <cliquesnv> amd <shorah>  ##CAP SENSITIVE --- optios are contained within < > ## Default: LOFREQ
-Base_Recalibration: "lofreq"                          #Options: <bqsr> or <lofreq> # lofreqindelqual is the default and represents <lofreq> - BQSR currently non-functional
-Variants_database:                                    #Not currently used
+
+
+
+#Not implemented
+#Base_Recalibration: "lofreq"                          #Options: <bqsr> or <lofreq> # lofreqindelqual is the default and represents <lofreq> - BQSR currently non-functional
+#Variants_database:                                    #Not currently used
+#Filtering_Cutoffs: 'DP>=30 && AF>=0.01 && QUAL>20'    #Default >>>>>> "DP>=30 && AF>=0.01 && QUAL>20" -------currently adjusted in the subworkflow "VariantCalling.nf"
