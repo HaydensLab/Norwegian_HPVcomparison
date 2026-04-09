@@ -21,7 +21,7 @@ workflow HAPLOTYPE_RECONSTRUCTION{
     take:
 
     main:
-
+    cliqueSNV(params.platform.toLowerCase())
 
     emit:
 
