@@ -56,6 +56,7 @@ workflow{
     VARIANT_CALLING(BWAALIGNMENT.out.BAM_out)
 
     //HaplotypeReconstruction for generation of varied neoantigen calls
+        //cliqueSNV
 
     //CONSENSUS GENOME GENERATION
     //PHYLOGENETIC ANALYSIS
