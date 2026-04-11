@@ -1,5 +1,5 @@
 # VAVIA
-## Viral Antigen and Variant calling Information Aggregator
+## **V**iral **A**ntigen and **V**ariant calling **I**nformation **A**ggregator
 
 A nextflow based workflow combining a number of tools run from paired-end sequencing reads all the
 way to Haplotypes, Variant calls and Antigen prediction.
