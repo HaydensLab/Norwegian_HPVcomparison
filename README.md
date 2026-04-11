@@ -1,4 +1,4 @@
-# VAVIA
+# VAVIA *early dev-WIP*
 ## **V**iral **A**ntigen and **V**ariant calling **I**nformation **A**ggregator
 
 A nextflow based workflow combining a number of tools run from paired-end sequencing reads all the
