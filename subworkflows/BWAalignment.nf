@@ -15,11 +15,18 @@ process Stats_and_Coverage{
     tuple val(sampleid), path(bam_path)
 
     output:
-    tuple val(sampleid), path(bam_path), env(AVERAGE_COVERAGE), emit: "bam_and_coverage", optional: true
+    env('patch_num'), emit: "BAM_splitting", optional: true
+    path("${sampleid}.stats"), emit: "BAM_stats", optional: true
 
     script:
+    //takes sum of depth divide by number of lines (average depth)
+    //then divides by 750 to calculate the total number of splits the data requires for savage
+    //then generates a stats output for the bam file
     """
-    AVERAGE_COVERAGE=$(samtools depth -a ${bam_path} | awk '{}')
+    AVERAGE_COVERAGE=\$(samtools depth -a ${bam_path} | awk '{sum+=\$3} END {print (sum/NR)}')
+    patch_num=\$(awk -v x="\$AVERAGE_COVERAGE" 'BEGIN {print int(x/750)}')
+    samtools stats ${bam_path} > "${sampleid}.stats"
+    echo "${sampleid} has an average coverage of \$AVERAGE_COVERAGE \n\n Savage splitting: \$patch_num"
     """
 }
 
@@ -41,14 +48,16 @@ workflow BWAALIGNMENT{
     Markdup(Fixmate.out.Sorted_Fixmate_BAM) //takes coordinate sorted Fixmate -m bam
     IndexForIGV(Markdup.out.Markdup_BAM) //outputs bai
     
-    //Running coverage and other stats calculations
-
+    //Running coverage and other stats calculations - taking the markdup as input
+    Stats_and_Coverage(Markdup.out.Markdup_BAM)
 
 
     emit:
     Indexes = BWA_Indexing.out.Index_files
     BAM_out = Markdup.out.Markdup_BAM
     BAI_out = IndexForIGV.out.bai
+    BAM_Stats_out = Stats_and_Coverage.out.BAM_stats
+    Savage_splitting = Stats_and_Coverage.out.BAM_splitting
 
     //test
     // BAM_out = Aligner.out.bam.map{sampleid, rando_bam_path -> rando_bam_path}

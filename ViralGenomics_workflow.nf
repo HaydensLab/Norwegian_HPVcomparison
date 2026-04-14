@@ -57,7 +57,7 @@ workflow{
     VARIANT_CALLING(BWAALIGNMENT.out.BAM_out)
 
     //HaplotypeReconstruction for generation of varied neoantigen calls
-    HAPLOTYPE_RECONSTRUCTION(BWAALIGNMENT.out.BAM_out, PREPROCESSING.out.Fastp_trimmed)    //cliqueSNV, haploclique and SAVAGE
+    HAPLOTYPE_RECONSTRUCTION(BWAALIGNMENT.out.BAM_out, PREPROCESSING.out.Fastp_trimmed, BWAALIGNMENT.out.Savage_splitting)    //cliqueSNV, haploclique and SAVAGE
 
     //CONSENSUS GENOME GENERATION
     //PHYLOGENETIC ANALYSIS
@@ -75,6 +75,7 @@ workflow{
     Indexes                 = BWAALIGNMENT.out.Indexes
     BAM_out                 = BWAALIGNMENT.out.BAM_out.map{sampleid, markdup_bam_path -> markdup_bam_path} //taking only the second argument of the tuple by overwriting with only second argument
     BAI_out                 = BWAALIGNMENT.out.BAI_out
+    BAM_stats_out           = BWAALIGNMENT.out.BAM_Stats_out
     //variant calling
     VCF_out                 = VARIANT_CALLING.out.VCF_out
     nVCF_out                = VARIANT_CALLING.out.nVCF_out
@@ -118,7 +119,7 @@ output{
         path "./${params.batch}/Trimmed_multiqc"
         mode "copy"
     }
-    //=================================Align + Indexes =================================
+    //=================================BAM + Indexes + BAM stats =================================
     Indexes{
         path "./${params.batch}/Aligned_and_Indexes"
     }
@@ -126,6 +127,9 @@ output{
         path "./${params.batch}/Aligned_and_Indexes"
     }
     BAI_out{
+        path "./${params.batch}/Aligned_and_Indexes"
+    }
+    BAM_stats_out{
         path "./${params.batch}/Aligned_and_Indexes"
     }
     //=================================Variant calling =================================

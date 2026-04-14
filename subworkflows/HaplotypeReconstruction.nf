@@ -23,17 +23,28 @@ process SAVAGE{
 
     input:
     tuple val(sampleid), path(read1), path(read2)
+    val(split_num)
 
     output:
     tuple val(sampleid), path("${sampleid}_SAVAGEoutput/*"), emit: "SAVAGE_out", optional: true
     script:
     """
-    savage --split  --revcomp \
-    -p1 "${read1}" -p2 ${read2} -o "${sampleid}_SAVAGEoutput/"
+    gunzip -c ${read1} > "${sampleid}_1.fastq"
+    gunzip -c ${read2} > "${sampleid}_2.fastq"
+
+
+    bash_split=$split_num
+    if [ \$bash_split -eq 0 ]; then
+        savage --split 1 --revcomp \
+        -p1 ${sampleid}_1.fastq -p2 "${sampleid}_2.fastq" -o "${sampleid}_SAVAGEoutput/"
+    else
+        savage --split $split_num --revcomp \
+        -p1 ${sampleid}_1.fastq -p2 "${sampleid}_2.fastq" -o "${sampleid}_SAVAGEoutput/"
+    fi
     """
 }
 
-process HaploClique{
+process HaploClique{ //currently unused
     container "community.wave.seqera.io/library/haploclique:1.3.1--5baeef280bc3b4ba"
     tag("${sampleid}")
 
@@ -58,6 +69,7 @@ process cliqueSNV{
     input:
     val(platform)
     tuple val(sampleid), path(bam_path) //input the metadata and path to the bam file which will be converted back to the sam as an intermediate step.
+    //Input also takes patch_num (Coverage_and_stats environment variable) but does not use it in order to minimise channels used
 
     output:
     tuple val(sampleid), path("snv_output/*"), emit: "CliqueSNV_out", optional: true //tuple for sampleid specific folder output with all contents
@@ -76,13 +88,14 @@ workflow HAPLOTYPE_RECONSTRUCTION{
     take:
     Markdup_BAM
     raw_reads
+    Savage_splitting
     main:
     //Haplotype SNV calls
-         cliqueSNV(params.platform.toLowerCase(), Markdup_BAM)
+         cliqueSNV(params.platform.toLowerCase(), Markdup_BAM) //does not take splits as input
             cliqueSNV.out.CliqueSNV_out.view()
     //Global haplotypes
             //HaploClique(Markdup_BAM)
-        SAVAGE(raw_reads)
+        SAVAGE(raw_reads, Savage_splitting)
 
     emit:
     Haplotype_out = cliqueSNV.out.CliqueSNV_out
