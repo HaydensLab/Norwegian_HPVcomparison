@@ -1,5 +1,5 @@
 # VAVIA *early dev-WIP*
-## **V**iral **A**ntigen and **V**ariant calling **I**nformation **A**ggregator
+## <ins>**V**</ins>iral <ins>**A**</ins>ntigen and <ins>**V**</ins>ariant calling <ins>**I**</ins>nformation <ins>**A**</ins>ggregator
 
 A nextflow based workflow combining a number of tools run from paired-end sequencing reads all the
 way to Haplotypes, Variant calls and Antigen prediction.
