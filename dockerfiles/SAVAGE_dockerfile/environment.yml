@@ -1,0 +1,8 @@
+name: SAVAGEenv
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - savage
+ - blast
+
