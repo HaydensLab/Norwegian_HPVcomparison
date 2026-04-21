@@ -1,5 +1,8 @@
 # VAVIA *early dev-WIP*
 ## <ins>**V**</ins>iral <ins>**A**</ins>ntigen and <ins>**V**</ins>ariant calling <ins>**I**</ins>nformation <ins>**A**</ins>ggregator
+Provided docker images will be automatically installed provided nextflow config is set to allow docker.
+Bespoke images: https://hub.docker.com/repository/docker/haydenslab/vavia-savage/general
+
 
 A nextflow based workflow combining a number of tools run from paired-end sequencing reads all the
 way to Haplotypes, Variant calls and Antigen prediction.
