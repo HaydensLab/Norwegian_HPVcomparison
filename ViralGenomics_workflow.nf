@@ -43,10 +43,10 @@ workflow{
     println("Drawing from read location: ${params.read_location}")
     println("Provided insert size: ${params.insert_size}")
     println("=============================================Overview=============================================")
-    println("This workflow will draw reads, align to a provided reference genome\nit will then call variants\nin this future this workflow will generate antigen prediction")
-    println("Current processes: raw fastqc, raw multiqc, fastp (later trimmomatic option), repeat QC for trimmed, BWA-MEM aligment, Fixmate + Markdup, Indexing for IGV viewing, LoFreq indelqual+Calling, VCF normalisation and filtering")
+    println("This workflow will draw reads, align to a provided reference genome\nit will then call variants\nin the future this workflow will generate antigen prediction")
+    println("Current processes: raw fastqc, raw multiqc, fastp (later trimmomatic option), repeat QC for trimmed, BWA-MEM aligment, Fixmate + Markdup, Indexing for IGV viewing, LoFreq indelqual+Calling, VCF normalisation, filtering\nhaplotype reconstruction for antigen prediction")
     println("Current filtering parameters: DP>=30 && AF>=0.01 && QUAL>20 - defaults")
-    println("!!!!!!!!!!!!!!!! To edit these please modify the Normalise_and_Filter module ----- a config parameter will be added at a later date")
+    println("To edit any parameters that are program specific and not in RunConfig.yaml please modify in the /modules directory to fit your needs")
 
     //PRE-PROCESSING
     PREPROCESSING() //runs fastqc, multiqc and fastp #######add option for trimmotatic

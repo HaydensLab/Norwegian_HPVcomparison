@@ -18,6 +18,8 @@
 process SAVAGE{
     container "haydenslab/vavia-savage:1.0.1"
     tag("${sampleid}")
+    maxForks(1) //SAVAGE is highly memory intensive, as such only 1 SAVAGE will run at a time to attempt to prevent OOM errors.
+
 
     input:
     tuple val(sampleid), path(read1), path(read2)
@@ -25,6 +27,8 @@ process SAVAGE{
 
     output:
     tuple val(sampleid), path("${sampleid}_SAVAGEoutput/*"), emit: "SAVAGE_out", optional: true
+
+
     script:
     """ 
     gunzip -c ${read1} > "${sampleid}_1.fastq"
@@ -44,8 +48,8 @@ process SAVAGE{
 
     bash_split=$split_num
 
-    if [ \$bash_split -lt 2 ]; then
-        savage --split 2 --revcomp -t 4 \
+    if [ \$bash_split -lt 1 ]; then
+        savage --split 1 --revcomp -t 4 \$min_overlap \
         -p1 ${sampleid}_1.fastq -p2 "${sampleid}_2.fastq" -o "${sampleid}_SAVAGEoutput/"
     elif ! [[ \$bash_split =~ ^[0-9]+\$ ]]; then
         echo "ERROR: calculated split_num for SAVAGE -splits was not a valid integer"
