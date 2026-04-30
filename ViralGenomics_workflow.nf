@@ -58,6 +58,10 @@ workflow{
     println("==================================================================================================")
     println("To edit any parameters that are program specific and not in RunConfig.yaml please modify in the /modules directory to fit your needs")
 
+
+
+
+
     //PRE-PROCESSING
     PREPROCESSING() //runs fastqc, multiqc and fastp #######add option for trimmotatic
 
@@ -74,27 +78,9 @@ workflow{
     //PHYLOGENETIC ANALYSIS
     //construct for args to be added later: Variable ? Iftrue : Else
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //processes: if QC include QC process, if not QC just use raw fastp, if bam input go straight past alignment steps to variant calling etc
+    //Choice for each param will be in each relevant subworkflow. for example QC+/- = in preprocessing only use fastp, else include multiqc and fastqc
+    //maybe provide an option to just provide fully formed fastq paired end files with preprocessing and adapter removal already done (add trimomatic)
 
 
 
