@@ -3,7 +3,7 @@ nextflow.enable.dsl=2
 
 
 params{
-    read_location: String
+    read_location: Path = null
     batch: String = "batch_default"
     Ref_genome_path: Path
     Ref_Accession: String
@@ -46,6 +46,10 @@ include { HAPLOTYPE_RECONSTRUCTION } from './subworkflows/HaplotypeReconstructio
 workflow{
 
     main:
+    if(!params.read_location){ //if not overwritten by config will error with error code 2
+        exit(1, "No path to input data provided")
+    }
+
     println("============================================PARAMETERS============================================")
     println("batch: ${params.batch}")
     //println("Reference accession: ${params.Ref_accession}")
@@ -59,9 +63,6 @@ workflow{
     println("To edit any parameters that are program specific and not in RunConfig.yaml please modify in the /modules directory to fit your needs")
 
 
-
-
-    
     //PRE-PROCESSING
     PREPROCESSING() //runs fastqc, multiqc and fastp #######add option for trimmotatic
 

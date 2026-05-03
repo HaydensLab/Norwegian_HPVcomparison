@@ -15,7 +15,6 @@ workflow PREPROCESSING{
     //Input channel inputting a flat array of the ID, Read1 path, Read2 path.
     Raw_Reads_channel = channel.fromFilePairs("${params.read_location}/*_{1,2}.fastq.gz", flat: true)//this specifies group pairs matching the pattern starts with ERR ends with _1 OR _2 it outputs an array with value 0 being ID before _1/2 and the read pair
 
-
     //upfront declaration of output channels setting as default for optional emits
     fastqc_qc_path = channel.empty()
     multiqc_out = channel.empty()
@@ -55,8 +54,7 @@ workflow PREPROCESSING{
         fastp_out_json = fastp.out.json
     }
     else{
-        error("Invalid QC parameter input! Please provide: true or false to Run_QC parameter")
-        exit(1,"Invalid QC parameter input! Please provide: true or false to Run_QC parameter")
+        exit(2,"Invalid QC parameter input! Please provide: true or false to Run_QC parameter")
     }
 
 
