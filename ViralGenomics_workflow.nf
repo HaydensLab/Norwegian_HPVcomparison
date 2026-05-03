@@ -61,7 +61,7 @@ workflow{
 
 
 
-
+    
     //PRE-PROCESSING
     PREPROCESSING() //runs fastqc, multiqc and fastp #######add option for trimmotatic
 
