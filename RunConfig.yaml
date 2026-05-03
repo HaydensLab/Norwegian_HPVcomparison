@@ -7,7 +7,6 @@ platform: "ILLUMINA"                                  #put in all caps
 #Mode selection --- if not specified will turn on all extras and default to fastq mode
 Run_QC: true
 Run_HaplotypeReconstruction: true
-Input_format: "fastq"                                   #Either <"b"/"bam"> (provide a bam file) or paired-end <"f"/"fastq"> (<> indicates argument) CURRENTLY WIP
 Index_for_IGV: true
 
 #Optional

@@ -18,7 +18,6 @@ params{
     //subworkflow selection - used for deciding how you want the pipeline to run
     Run_QC: Boolean = true
     Run_HaplotypeReconstruction: Boolean = true
-    Input_format: String = "fastq"
     Index_for_IGV: Boolean = true
 }
 //==========================================================================Help section==========================================================================
@@ -44,8 +43,29 @@ include { VARIANT_CALLING } from './subworkflows/VariantCalling.nf'
 include { HAPLOTYPE_RECONSTRUCTION } from './subworkflows/HaplotypeReconstruction.nf'
 
 workflow{
-
+    
     main:
+    println("""VVVVVVVV           VVVVVVVV   AAA   VVVVVVVV           VVVVVVVVIIIIIIIIII               AAA               
+V::::::V           V::::::V  A:::A  V::::::V           V::::::VI::::::::I              A:::A              
+V::::::V           V::::::V A:::::A V::::::V           V::::::VI::::::::I             A:::::A             
+V::::::V           V::::::VA:::::::AV::::::V           V::::::VII::::::II            A:::::::A            
+ V:::::V           V:::::VA:::::::::AV:::::V           V:::::V   I::::I             A:::::::::A           
+  V:::::V         V:::::VA:::::A:::::AV:::::V         V:::::V    I::::I            A:::::A:::::A          
+   V:::::V       V:::::VA:::::A A:::::AV:::::V       V:::::V     I::::I           A:::::A A:::::A         
+    V:::::V     V:::::VA:::::A   A:::::AV:::::V     V:::::V      I::::I          A:::::A   A:::::A        
+     V:::::V   V:::::VA:::::A     A:::::AV:::::V   V:::::V       I::::I         A:::::A     A:::::A       
+      V:::::V V:::::VA:::::AAAAAAAAA:::::AV:::::V V:::::V        I::::I        A:::::AAAAAAAAA:::::A      
+       V:::::V:::::VA:::::::::::::::::::::AV:::::V:::::V         I::::I       A:::::::::::::::::::::A     
+        V:::::::::VA:::::AAAAAAAAAAAAA:::::AV:::::::::V          I::::I      A:::::AAAAAAAAAAAAA:::::A    
+         V:::::::VA:::::A             A:::::AV:::::::V         II::::::II   A:::::A             A:::::A   
+          V:::::VA:::::A               A:::::AV:::::V          I::::::::I  A:::::A               A:::::A  
+           V:::VA:::::A                 A:::::AV:::V           I::::::::I A:::::A                 A:::::A 
+            VVVAAAAAAA                   AAAAAAAVVV            IIIIIIIIIIAAAAAAA                   AAAAAAA""")
+            println("Viral-Antigen-and-Variant-calling-Information-Aggregator")
+
+
+
+
     if(!params.read_location){ //if not overwritten by config will error with error code 2
         exit(1, "No path to input data provided")
     }
@@ -73,7 +93,18 @@ workflow{
     VARIANT_CALLING(BWAALIGNMENT.out.BAM_out)
 
     //HaplotypeReconstruction for generation of varied neoantigen calls
-    HAPLOTYPE_RECONSTRUCTION(BWAALIGNMENT.out.BAM_out, PREPROCESSING.out.Fastp_trimmed, BWAALIGNMENT.out.Savage_splitting)    //cliqueSNV, haploclique and SAVAGE
+    SAVAGE_out = channel.empty()
+    CliqueSNV_out = channel.empty() //channels set to empty for optional skipping
+
+    if(!params.Run_HaplotypeReconstruction){
+        println("Skipping Viral Haplotype Reconstruction")
+    }else{
+        println("Performing Viral Haplotype Reconstruction")
+        HAPLOTYPE_RECONSTRUCTION(BWAALIGNMENT.out.BAM_out, PREPROCESSING.out.Fastp_trimmed, BWAALIGNMENT.out.Savage_splitting)
+        SAVAGE_out = HAPLOTYPE_RECONSTRUCTION.out.Global_Haplotype_out
+        CliqueSNV_out = HAPLOTYPE_RECONSTRUCTION.out.Haplotype_out
+    }
+    
 
     //CONSENSUS GENOME GENERATION
     //PHYLOGENETIC ANALYSIS
@@ -104,8 +135,8 @@ workflow{
     nVCF_out                = VARIANT_CALLING.out.nVCF_out
     fnVCF_out               = VARIANT_CALLING.out.fnVCF_out
     //haplotype reconstruction
-    Haplotype_out           = HAPLOTYPE_RECONSTRUCTION.out.Haplotype_out //output the pan haplotype output - currently testing
-    Global_Haplotype_out    = HAPLOTYPE_RECONSTRUCTION.out.Global_Haplotype_out
+    Haplotype_out           = CliqueSNV_out //output the pan haplotype output - currently testing
+    Global_Haplotype_out    = SAVAGE_out
 
 }
 
